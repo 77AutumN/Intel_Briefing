@@ -1,0 +1,32 @@
+# 隐私数据和缓存
+.env
+.secrets/
+
+# 生成的报告 (你的私有情报)
+reports/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Antigravity 本地状态
+.antigravity/
+
+# 归档
+.archive/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# 临时任务文件
+task.md
+implementation_plan.md
