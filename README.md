@@ -30,7 +30,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Intel_Briefing.git
+git clone https://github.com/77AutumN/Intel_Briefing.git
 cd Intel_Briefing
 ```
 
