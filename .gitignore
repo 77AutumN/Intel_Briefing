@@ -8,6 +8,10 @@ reports/
 # 玩家档案 (个人隐私)
 player/
 
+# 任务系统和收入数据 (商业策略)
+quests/
+revenue/
+
 # 商业逻辑配置 (包含个人信息)
 .agent/skills/revenue-architect/prompts/
 
