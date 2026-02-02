@@ -5,6 +5,12 @@
 # 生成的报告 (你的私有情报)
 reports/
 
+# 玩家档案 (个人隐私)
+player/
+
+# 商业逻辑配置 (包含个人信息)
+.agent/skills/revenue-architect/prompts/
+
 # Python 缓存
 __pycache__/
 *.pyc
