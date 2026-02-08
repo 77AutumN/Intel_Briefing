@@ -1,0 +1,65 @@
+name: Daily Intelligence Report
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # UTC 00:00 = 北京 08:00
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout engine
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate Morning Report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          XAI_BASE_URL: https://api.gptsapi.net/v1/chat/completions
+          XAI_MODEL: grok-3
+          PRODUCTHUNT_TOKEN: ${{ secrets.PRODUCTHUNT_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python run_mission.py
+
+      - name: Deliver report to PWA
+        env:
+          PWA_DEPLOY_TOKEN: ${{ secrets.PWA_DEPLOY_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          REPORT="reports/daily_briefings/Morning_Report_${DATE}.md"
+
+          if [ ! -f "$REPORT" ]; then
+            echo "❌ Report not found: $REPORT"
+            ls -la reports/daily_briefings/ 2>/dev/null || echo "Directory does not exist"
+            exit 1
+          fi
+
+          echo "📄 Report found: $(wc -c < "$REPORT") bytes"
+
+          git clone https://x-access-token:${PWA_DEPLOY_TOKEN}@github.com/77AutumN/intel-briefing-pwa.git /tmp/pwa
+          cp "$REPORT" /tmp/pwa/data/daily_briefings/
+
+          cd /tmp/pwa
+          git config user.name "Intel Bot"
+          git config user.email "bot@7brief.com"
+          git add data/daily_briefings/
+          git diff --cached --stat
+
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+          else
+            git commit -m "data: add daily report ${DATE}"
+            git push
+            echo "✅ Report delivered to intel-briefing-pwa"
+          fi

@@ -1,0 +1,58 @@
+# 隐私数据和缓存
+.env
+.secrets/
+
+# 生成的报告 (你的私有情报)
+reports/
+
+# 玩家档案 (个人隐私)
+player/
+
+# 任务系统和收入数据 (商业策略)
+quests/
+revenue/
+
+# 商业逻辑配置 (包含个人信息)
+.agent/skills/revenue-architect/prompts/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Antigravity 本地状态
+.antigravity/
+
+# 归档
+.archive/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# 临时任务文件
+task.md
+implementation_plan.md
+
+# === 隐私保护：个人策略和偏好 ===
+AIA_Field_Manual.md
+SKILL.md
+run_revenue_architect.py
+run_bounty_hunter.py
+run_alpha_radar.py
+src/generators/curator.py
+
+# Agent 配置（含个人工作流和策略 prompt）
+.agent/
+
+# 临时/调试文件
+temp_*.csv
+debug_*.py
+*.bak
