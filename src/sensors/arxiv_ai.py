@@ -34,12 +34,34 @@ class ArxivPaper:
         return f"https://arxiv.org/pdf/{self.id}.pdf"
 
 def fetch_ai_papers(limit: int = 10) -> List[ArxivPaper]:
-    """Fetch latest AI/ML papers from arXiv."""
+    """Fetch latest AI/ML papers from arXiv with weekend fallback."""
     print(f"  → Fetching latest {limit} AI papers from arXiv...")
     
-    # Query for AI categories - URL encoded properly
-    query = "cat:cs.AI"
-    url = f"https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={limit}&sortBy=submittedDate&sortOrder=descending"
+    # Strategy: try progressively broader queries if results are empty
+    strategies = [
+        ("cat:cs.AI", "submittedDate"),                      # Default: latest AI papers
+        ("cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CL", "submittedDate"),  # Broader: AI + ML + NLP
+        ("cat:cs.AI+OR+cat:cs.LG", "lastUpdatedDate"),       # Last resort: recently updated
+    ]
+    
+    for i, (query, sort_by) in enumerate(strategies):
+        papers = _query_arxiv(query, sort_by, limit)
+        if papers:
+            if i > 0:
+                print(f"    ✓ Got {len(papers)} papers using fallback strategy #{i+1}")
+            return papers
+        if i < len(strategies) - 1:
+            import time
+            print(f"    ⚠ Strategy #{i+1} returned 0 papers, retrying with broader query...")
+            time.sleep(3)  # Brief delay to avoid rate-limiting
+    
+    print("    ⚠ All strategies exhausted, no papers found")
+    return []
+
+
+def _query_arxiv(query: str, sort_by: str, limit: int) -> List[ArxivPaper]:
+    """Execute a single ArXiv API query and parse results."""
+    url = f"https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={limit}&sortBy={sort_by}&sortOrder=descending"
     
     try:
         resp = httpx.get(url, timeout=30)
