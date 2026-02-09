@@ -2,7 +2,7 @@ name: Daily Intelligence Report
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # UTC 00:00 = 北京 08:00
+    - cron: '51 23 * * *'  # UTC 23:51 = 北京 07:51（避开整点高峰）
   workflow_dispatch:
 
 jobs:
