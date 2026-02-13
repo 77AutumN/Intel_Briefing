@@ -72,7 +72,8 @@ class TestReportGenerator:
         report = generate_report(intel, "2026-01-01")
         assert "全球情报日报" in report
         assert "2026-01-01" in report
-        assert "暂无数据" in report
+        # 空板块应该被隐藏，数据源显示为"无"
+        assert "数据源:** 无" in report
 
     def test_generate_report_with_data(self):
         from src.report_generator import generate_report

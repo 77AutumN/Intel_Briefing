@@ -171,6 +171,89 @@ def summarize_blog_article(content: str, mode: str = "brief") -> str:
         return ""
 
 
+def generate_executive_summary(intel: dict) -> str:
+    """
+    为整份情报报告生成 Executive Summary（3-5句话概括今日要点）。
+
+    Args:
+        intel: 完整的情报数据字典
+
+    Returns:
+        中文 Executive Summary，如果失败返回空字符串
+    """
+    if not GEMINI_API_KEY:
+        logger.debug("GEMINI_API_KEY 未配置，跳过 Executive Summary 生成")
+        return ""
+
+    # 收集各板块的标题作为输入
+    highlights = []
+
+    # 技术趋势 - 取前3条
+    for item in intel.get("tech_trends", [])[:3]:
+        title = item.get("title", "")
+        heat = item.get("heat", "")
+        if title:
+            highlights.append(f"[技术] {title} (热度: {heat})")
+
+    # 资本动向 - 取前2条
+    for item in intel.get("capital_flow", [])[:2]:
+        title = item.get("title", "")
+        if title:
+            highlights.append(f"[资本] {title}")
+
+    # 学术前沿 - 取前2条
+    for item in intel.get("research", [])[:2]:
+        title = item.get("title", "")
+        if title:
+            highlights.append(f"[论文] {title}")
+
+    # 产品精选 - 取前2条
+    for item in intel.get("product_gems", [])[:2]:
+        title = item.get("title", "")
+        tagline = item.get("tagline", "")
+        if title:
+            highlights.append(f"[产品] {title}: {tagline}")
+
+    if not highlights:
+        return ""
+
+    prompt = f"""你是一位资深科技情报分析师。请根据以下今日热点，撰写一段 Executive Summary（执行摘要）。
+
+要求：
+1. 用 3-5 句中文概括今天最值得关注的动态
+2. 突出重大事件、趋势变化、值得关注的信号
+3. 语言简洁有力，像给 CEO 的晨间简报
+4. 不要罗列，要有分析和洞察
+5. 总长度 150-250 字
+
+今日热点：
+{chr(10).join(highlights)}"""
+
+    url = f"{GEMINI_API_URL}/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.5,
+            "maxOutputTokens": 512
+        }
+    }
+
+    try:
+        with httpx.Client(timeout=GEMINI_TIMEOUT) as client:
+            response = client.post(url, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                result = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                return result.strip() if result else ""
+            else:
+                logger.warning(f"Executive Summary 生成失败: HTTP {response.status_code}")
+                return ""
+    except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError) as e:
+        logger.warning(f"Executive Summary 生成出错: {e}")
+        return ""
+
+
 if __name__ == "__main__":
     # Test translation
     test_text = "Adapting large pretrained models to new tasks efficiently and continually is crucial for real-world deployment but remains challenging due to catastrophic forgetting."

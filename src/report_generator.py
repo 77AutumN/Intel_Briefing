@@ -22,10 +22,14 @@ except ImportError:
 
 # --- Gemini Translator ---
 try:
-    from utils.gemini_translator import translate_to_chinese, summarize_blog_article
+    from utils.gemini_translator import translate_to_chinese, summarize_blog_article, generate_executive_summary
     GEMINI_AVAILABLE = True
 except ImportError:
-    GEMINI_AVAILABLE = False
+    try:
+        from src.utils.gemini_translator import translate_to_chinese, summarize_blog_article, generate_executive_summary
+        GEMINI_AVAILABLE = True
+    except ImportError:
+        GEMINI_AVAILABLE = False
 
 # --- Jina Reader (Full Content Fetcher) ---
 try:
@@ -43,24 +47,57 @@ if not GEMINI_AVAILABLE:
     def summarize_blog_article(content, mode="brief"):
         return ""
 
+    def generate_executive_summary(intel):
+        return ""
+
 
 def generate_report(intel: dict, date_str: str) -> str:
-    """Generate magazine-style markdown report."""
+    """Generate magazine-style markdown report with executive summary and hidden empty sections."""
+
+    # 计算活跃数据源
+    active_sources = []
+    if intel.get("tech_trends"):
+        active_sources.append("HN")
+        active_sources.append("GitHub")
+    if intel.get("capital_flow"):
+        active_sources.append("36Kr")
+        active_sources.append("WallStreetCN")
+    if intel.get("community"):
+        active_sources.append("V2EX")
+    if intel.get("product_gems"):
+        active_sources.append("PH")
+    if intel.get("research"):
+        active_sources.append("ArXiv")
+    if intel.get("social"):
+        active_sources.append("X")
+    if intel.get("insights"):
+        active_sources.append("Blogs")
+
+    sources_str = ", ".join(active_sources) if active_sources else "无"
+
     lines = [
         f"# 🌐 全球情报日报 (Global Intel Briefing)",
         f"**日期:** {date_str}",
         f"**生成时间:** {datetime.now().strftime('%H:%M')}",
-        f"**数据源:** HN, GitHub, 36Kr, WallStreetCN, V2EX, PH, ArXiv, X, XHS",
+        f"**数据源:** {sources_str}",
         "",
-        "---",
-        ""
     ]
 
-    # --- Tech Trends ---
-    lines.append("## 🛠️ 技术趋势 (Tech Trends)")
-    lines.append("> Hacker News + GitHub Trending\n")
+    # --- Executive Summary (AI 生成) ---
+    exec_summary = generate_executive_summary(intel)
+    if exec_summary:
+        lines.append("## 📌 今日要点 (Executive Summary)")
+        lines.append("")
+        lines.append(exec_summary)
+        lines.append("")
 
+    lines.append("---")
+    lines.append("")
+
+    # --- Tech Trends (仅在有数据时显示) ---
     if intel.get("tech_trends"):
+        lines.append("## 🛠️ 技术趋势 (Tech Trends)")
+        lines.append("> Hacker News + GitHub Trending\n")
         for i, item in enumerate(intel["tech_trends"][:10], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -71,14 +108,11 @@ def generate_report(intel: dict, date_str: str) -> str:
             lines.append(f"### {i}. [{title}]({url})")
             lines.append(f"📍 {cat} | 🔥 {heat} | 🕒 {time_str}")
             lines.append("")
-    else:
-        lines.append("*暂无数据*\n")
 
-    # --- Capital Flow ---
-    lines.append("## 💰 资本动向 (Capital Flow)")
-    lines.append("> 36Kr + 华尔街见闻\n")
-
+    # --- Capital Flow (仅在有数据时显示) ---
     if intel.get("capital_flow"):
+        lines.append("## 💰 资本动向 (Capital Flow)")
+        lines.append("> 36Kr + 华尔街见闻\n")
         for i, item in enumerate(intel["capital_flow"][:10], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -88,14 +122,11 @@ def generate_report(intel: dict, date_str: str) -> str:
             lines.append(f"### {i}. [{title}]({url})")
             lines.append(f"📍 {cat} | 🕒 {time_str}")
             lines.append("")
-    else:
-        lines.append("*暂无数据*\n")
 
-    # --- Research (ArXiv) ---
-    lines.append("## 📚 学术前沿 (Research)")
-    lines.append("> ArXiv AI/ML Papers\n")
-
+    # --- Research (ArXiv) (仅在有数据时显示) ---
     if intel.get("research"):
+        lines.append("## 📚 学术前沿 (Research)")
+        lines.append("> ArXiv AI/ML Papers\n")
         for i, item in enumerate(intel["research"][:5], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -119,14 +150,11 @@ def generate_report(intel: dict, date_str: str) -> str:
                 lines.append(f"**详情:** {detail_cn}")
 
             lines.append("")
-    else:
-        lines.append("*暂无数据*\n")
 
-    # --- Product Gems ---
-    lines.append("## 💎 产品精选 (Product Gems)")
-    lines.append("> Product Hunt Today\n")
-
+    # --- Product Gems (仅在有数据时显示) ---
     if intel.get("product_gems"):
+        lines.append("## 💎 产品精选 (Product Gems)")
+        lines.append("> Product Hunt Today\n")
         for i, item in enumerate(intel["product_gems"][:8], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -142,14 +170,11 @@ def generate_report(intel: dict, date_str: str) -> str:
             if grok_review:
                 lines.append(f"> **🦅 Grok 舆情核查**: {grok_review}")
                 lines.append("")
-    else:
-        lines.append("*暂无数据 (Product Hunt API 可能需要配置)*\n")
 
-    # --- Social (X/Twitter) ---
-    lines.append("## 🐦 社交热议 (Social)")
-    lines.append("> X (Twitter) - AI/Tech Discussions\n")
-
+    # --- Social (X/Twitter) (仅在有数据时显示) ---
     if intel.get("social"):
+        lines.append("## 🐦 社交热议 (Social)")
+        lines.append("> X (Twitter) - AI/Tech Discussions\n")
         for item in intel["social"]:
             if item.get("type") == "markdown_report":
                 lines.append(f"> 来源: {item.get('source', 'X')}\n")
@@ -165,14 +190,11 @@ def generate_report(intel: dict, date_str: str) -> str:
                 lines.append(f"> {title}")
                 lines.append(f"❤️ {heat} | 🔗 [Link]({url})")
                 lines.append("")
-    else:
-        lines.append("*暂无数据 (需要配置 XAI_API_KEY)*\n")
 
-    # --- Community ---
-    lines.append("## 🗣️ 社区热点 (Community)")
-    lines.append("> V2EX 热门\n")
-
+    # --- Community (仅在有数据时显示) ---
     if intel.get("community"):
+        lines.append("## 🗣️ 社区热点 (Community)")
+        lines.append("> V2EX 热门\n")
         for i, item in enumerate(intel["community"][:5], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -181,30 +203,18 @@ def generate_report(intel: dict, date_str: str) -> str:
             lines.append(f"### {i}. [{title}]({url})")
             lines.append(f"💬 {heat}")
             lines.append("")
-    else:
-        lines.append("*暂无数据*\n")
 
-    # --- XHS Directives ---
-    lines.append("## 📕 小红书雷达 (XHS Radar)")
-    lines.append("> 手动搜索指令 (点击链接进入搜索页)\n")
+    # --- XHS Directives (仅在有数据时显示，且过滤掉纯搜索链接) ---
+    # 注：XHS Radar 目前只生成搜索链接，价值较低，暂时隐藏
+    # 如果后续实现真正的内容抓取，可以取消注释
+    # if intel.get("xhs_directives"):
+    #     lines.append("## 📕 小红书雷达 (XHS Radar)")
+    #     ...
 
-    if intel.get("xhs_directives"):
-        for i, item in enumerate(intel["xhs_directives"][:6], 1):
-            title = item.get("title", "")
-            url = item.get("url", "#")
-            summary = item.get("summary", "")
-
-            lines.append(f"### {i}. [{title}]({url})")
-            lines.append(f"> {summary[:80]}...")
-            lines.append("")
-    else:
-        lines.append("*XHS 传感器不可用*\n")
-
-    # --- Insights (HN Top Blogs) ---
-    lines.append("## 💡 深度洞察 (Insights)")
-    lines.append("> HN Top Blogs - 精选技术博客\n")
-
+    # --- Insights (HN Top Blogs) (仅在有数据时显示) ---
     if intel.get("insights"):
+        lines.append("## 💡 深度洞察 (Insights)")
+        lines.append("> HN Top Blogs - 精选技术博客\n")
         for i, item in enumerate(intel["insights"][:5], 1):
             title = item.get("title", "Untitled")
             url = item.get("url", "#")
@@ -243,8 +253,6 @@ def generate_report(intel: dict, date_str: str) -> str:
                 lines.append(f"**详情:** {detail_cn}")
 
             lines.append("")
-    else:
-        lines.append("*暂无数据 (HN Blogs 传感器不可用)*\n")
 
     lines.append("---")
     lines.append("*报告由 Unified Intelligence Engine V2 自动生成*")
