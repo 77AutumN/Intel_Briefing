@@ -4,11 +4,15 @@ Gemini Translator - 使用 Gemini API 翻译文本为中文
 """
 import os
 import sys
+import logging
 import httpx
 from dotenv import load_dotenv
 
+logger = logging.getLogger(__name__)
+
 # Force UTF-8 stdout for Windows
-sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # Load environment variables
 load_dotenv()
@@ -16,7 +20,7 @@ load_dotenv()
 # Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-MODEL_NAME = "gemini-2.5-flash-lite"  # 轻量级模型，免费额度充足（有效期至2026年7月）
+MODEL_NAME = "gemini-2.5-flash-lite"
 
 def translate_to_chinese(text: str, max_chars: int = 100) -> str:
     """
@@ -30,7 +34,7 @@ def translate_to_chinese(text: str, max_chars: int = 100) -> str:
         翻译后的中文文本，如果失败则返回原文
     """
     if not GEMINI_API_KEY:
-        print("    ⚠️ GEMINI_API_KEY 未配置，跳过翻译")
+        logger.warning("GEMINI_API_KEY 未配置，跳过翻译")
         return text[:max_chars] + "..." if len(text) > max_chars else text
     
     if not text or len(text) < 10:
@@ -71,17 +75,17 @@ def translate_to_chinese(text: str, max_chars: int = 100) -> str:
             else:
                 # API 返回空结果，重试
                 if attempt < max_retries - 1:
-                    print(f"    ⚠️ Gemini 返回空结果，重试 ({attempt + 1}/{max_retries})...")
-                    time.sleep(2 ** attempt)  # 指数退避: 1s, 2s, 4s
+                    logger.warning(f"Gemini 返回空结果，重试 ({attempt + 1}/{max_retries})...")
+                    time.sleep(2 ** attempt)
                     continue
                 return text[:max_chars] + "..." if len(text) > max_chars else text
                 
-        except Exception as e:
+        except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError) as e:
             if attempt < max_retries - 1:
-                print(f"    ⚠️ Gemini 翻译失败 ({attempt + 1}/{max_retries}): {e}")
-                time.sleep(2 ** attempt)  # 指数退避
+                logger.warning(f"Gemini 翻译失败 ({attempt + 1}/{max_retries}): {e}")
+                time.sleep(2 ** attempt)
                 continue
-            print(f"    ❌ Gemini 翻译最终失败: {e}")
+            logger.error(f"Gemini 翻译最终失败: {e}")
             return text[:max_chars] + "..." if len(text) > max_chars else text
     
     return text[:max_chars] + "..." if len(text) > max_chars else text
@@ -165,10 +169,10 @@ def summarize_blog_article(content: str, mode: str = "brief") -> str:
                 result = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                 return result.strip() if result else ""
             else:
-                print(f"    ⚠️ Gemini 摘要失败: HTTP {response.status_code}")
+                logger.warning(f"Gemini 摘要失败: HTTP {response.status_code}")
                 return ""
-    except Exception as e:
-        print(f"    ⚠️ Gemini 摘要出错: {e}")
+    except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError) as e:
+        logger.warning(f"Gemini 摘要出错: {e}")
         return ""
 
 

@@ -8,14 +8,18 @@ API: https://r.jina.ai/{url}
 Cost: Free tier (20 req/min without key, 500 req/min with free API key)
 """
 
+import logging
 import httpx
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Jina Reader API endpoint
 JINA_READER_URL = "https://r.jina.ai/"
 
 # Config
 FETCH_TIMEOUT = 30  # seconds
+MAX_CONTENT_CHARS = 15000
 
 
 def fetch_full_content(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
@@ -30,14 +34,14 @@ def fetch_full_content(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
         Clean markdown text of the article, or None if failed
     """
     if not url or not url.startswith(("http://", "https://")):
-        print(f"    [WARN] Invalid URL: {url}")
+        logger.warning(f"Invalid URL: {url}")
         return None
     
     jina_url = f"{JINA_READER_URL}{url}"
     
     try:
-        print(f"    [Jina] Fetching: {url[:60]}...")
-        
+        logger.info(f"Jina fetching: {url[:60]}...")
+
         with httpx.Client(timeout=timeout) as client:
             response = client.get(
                 jina_url,
@@ -52,27 +56,25 @@ def fetch_full_content(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
                 
                 # Validate content
                 if len(content) < 100:
-                    print(f"    [WARN] Content too short ({len(content)} chars)")
+                    logger.warning(f"Content too short ({len(content)} chars)")
                     return None
-                
-                # Truncate if too long (to save Gemini tokens)
-                max_chars = 15000  # ~4k tokens
-                if len(content) > max_chars:
-                    content = content[:max_chars] + "\n\n[...内容已截断...]"
-                    print(f"    [Jina] Truncated to {max_chars} chars")
+
+                if len(content) > MAX_CONTENT_CHARS:
+                    content = content[:MAX_CONTENT_CHARS] + "\n\n[...内容已截断...]"
+                    logger.debug(f"Jina truncated to {MAX_CONTENT_CHARS} chars")
                 else:
-                    print(f"    [Jina] Fetched {len(content)} chars")
+                    logger.debug(f"Jina fetched {len(content)} chars")
                 
                 return content
             else:
-                print(f"    [WARN] Jina returned status {response.status_code}")
+                logger.warning(f"Jina returned status {response.status_code}")
                 return None
-                
+
     except httpx.TimeoutException:
-        print(f"    [WARN] Jina timeout after {timeout}s")
+        logger.warning(f"Jina timeout after {timeout}s")
         return None
-    except Exception as e:
-        print(f"    [WARN] Jina error: {e}")
+    except (httpx.HTTPError, ValueError) as e:
+        logger.warning(f"Jina error: {e}")
         return None
 
 

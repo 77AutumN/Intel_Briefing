@@ -9,12 +9,16 @@ HN Top Blogs Sensor
 """
 
 import re
+import logging
 import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
 import ssl
+
+logger = logging.getLogger(__name__)
 
 # OPML Source
 OPML_URL = "https://gist.githubusercontent.com/emschwartz/e6d2bf860ccc367fe37ff953ba6de66b/raw/hn-popular-blogs-2025.opml"
@@ -60,11 +64,16 @@ def _strip_html(text: str) -> str:
 
 
 def _create_ssl_context():
-    """Create SSL context that ignores certificate errors (for some blogs)."""
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    return ctx
+    """Create SSL context with proper certificate verification."""
+    try:
+        ctx = ssl.create_default_context()
+        return ctx
+    except ssl.SSLError:
+        # Fallback: still verify but with reduced security rather than no security
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = True
+        ctx.verify_mode = ssl.CERT_REQUIRED
+        return ctx
 
 
 def _fetch_url(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
@@ -75,8 +84,8 @@ def _fetch_url(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
         })
         with urllib.request.urlopen(req, timeout=timeout, context=_create_ssl_context()) as response:
             return response.read().decode('utf-8', errors='ignore')
-    except Exception as e:
-        print(f"    [WARN] Failed to fetch {url[:50]}...: {e}")
+    except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError) as e:
+        logger.warning(f"Failed to fetch {url[:50]}...: {e}")
         return None
 
 
@@ -155,9 +164,9 @@ def parse_rss_feed(feed_content: str, source_title: str) -> List[BlogArticle]:
                         content=content_text
                     ))
     except ET.ParseError as e:
-        print(f"    [WARN] XML parse error for {source_title}: {e}")
-    except Exception as e:
-        print(f"    [WARN] Error parsing feed from {source_title}: {e}")
+        logger.warning(f"XML parse error for {source_title}: {e}")
+    except (AttributeError, KeyError, TypeError) as e:
+        logger.warning(f"Error parsing feed from {source_title}: {e}")
     
     return articles
 
@@ -172,19 +181,19 @@ def fetch_hn_blogs(limit: int = 5) -> List[BlogArticle]:
     Returns:
         List of BlogArticle objects, sorted by recency
     """
-    print(f"[*] Fetching HN Top Blogs (OPML)...")
-    
+    logger.info("Fetching HN Top Blogs (OPML)...")
+
     # 1. Fetch OPML
     opml_content = _fetch_url(OPML_URL)
     if opml_content:
         blogs = parse_opml(opml_content)
-        print(f"    Found {len(blogs)} blogs in OPML")
+        logger.info(f"Found {len(blogs)} blogs in OPML")
     else:
-        print("    [WARN] OPML fetch failed, using fallback feeds")
+        logger.warning("OPML fetch failed, using fallback feeds")
         blogs = FALLBACK_FEEDS
-    
+
     if not blogs:
-        print("    [ERROR] No blogs available")
+        logger.error("No blogs available")
         return []
     
     # 2. Fetch RSS from top N blogs
@@ -197,9 +206,9 @@ def fetch_hn_blogs(limit: int = 5) -> List[BlogArticle]:
             articles = parse_rss_feed(feed_content, blog["title"])
             all_articles.extend(articles)
             if articles:
-                print(f"    [{i+1}/{len(blogs_to_fetch)}] {blog['title']}: {len(articles)} articles")
+                logger.info(f"[{i+1}/{len(blogs_to_fetch)}] {blog['title']}: {len(articles)} articles")
         else:
-            print(f"    [{i+1}/{len(blogs_to_fetch)}] {blog['title']}: failed")
+            logger.debug(f"[{i+1}/{len(blogs_to_fetch)}] {blog['title']}: failed")
     
     # 3. Sort by date and return top N
     # Note: Date parsing is best-effort
@@ -207,14 +216,14 @@ def fetch_hn_blogs(limit: int = 5) -> List[BlogArticle]:
         try:
             if article.pub_date:
                 return datetime.fromisoformat(article.pub_date.replace('Z', '+00:00'))
-        except:
+        except (ValueError, TypeError, AttributeError):
             pass
         return datetime.min
     
     all_articles.sort(key=parse_date, reverse=True)
     result = all_articles[:limit]
     
-    print(f"    Collected {len(result)} articles total")
+    logger.info(f"Collected {len(result)} articles total")
     return result
 
 
