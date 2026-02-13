@@ -8,7 +8,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Powered by Antigravity](https://img.shields.io/badge/Powered%20by-Antigravity-8A2BE2)](https://github.com/google-gemini)
+[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-FF6B6B?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQxIDAtOC0zLjU5LTgtOHMzLjU5LTggOC04IDggMy41OSA4IDgtMy41OSA4LTggOHoiLz48L3N2Zz4=)](https://clawhub.ai/skills/intel-briefing)
 [![Stars](https://img.shields.io/github/stars/77AutumN/Intel_Briefing?style=social)](https://github.com/77AutumN/Intel_Briefing)
 
 </div>
@@ -67,43 +67,54 @@
 
 ## 🚀 快速开始
 
-### 1. 克隆仓库
+### 方式一：OpenClaw Skill（推荐）
+
+如果你已经在使用 [OpenClaw](https://openclaw.ai)，一行命令即可安装：
+
+```bash
+clawhub install intel-briefing
+```
+
+然后直接对 OpenClaw 说：
+- "帮我生成今日情报简报"
+- "今天科技圈有什么新闻"
+- "morning briefing"
+
+OpenClaw 会自动处理数据采集、AI 摘要和推送。
+
+### 方式二：独立运行
+
+#### 1. 克隆仓库
 
 ```bash
 git clone https://github.com/77AutumN/Intel_Briefing.git
 cd Intel_Briefing
 ```
 
-### 2. 安装依赖
+#### 2. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. 配置 API 密钥
+#### 3. 配置 API 密钥（可选）
 
 ```bash
 cp .env.example .env
-# 编辑 .env，填入你自己的 API Key
+# 编辑 .env，填入你自己的 API Key（所有配置都是可选的）
 ```
 
-### 4. 运行！
+#### 4. 运行！
 
 ```bash
-# 📊 生成情报日报（核心功能，推荐先试这个）
+# 📊 生成情报日报（核心功能）
 python run_mission.py
 
-# 💰 寻找赏金机会
-python run_bounty_hunter.py
-
-# ⛏️ 扫描 Web3 开源工具
-python run_alpha_radar.py
-
-# 🏗️ 分析机会并生成行动计划
-python run_revenue_architect.py
+# 或使用 OpenClaw 适配脚本
+python scripts/openclaw_handler.py --days 1
 ```
 
-报告会保存在 `reports/` 目录下。
+报告会保存在 `reports/daily_briefings/` 目录下。
 
 ### 5. 代理 / VPN 配置（可选）
 
@@ -146,6 +157,9 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 
 ```
 Intel_Briefing/
+├── SKILL.md                    # 🆕 OpenClaw Skill 定义
+├── scripts/
+│   └── openclaw_handler.py     # 🆕 OpenClaw 适配层
 ├── run_mission.py              # 🎯 主入口：情报日报
 ├── run_bounty_hunter.py        # 💰 赏金猎人
 ├── run_alpha_radar.py          # ⛏️ Alpha 雷达

@@ -18,6 +18,10 @@ def generate_morning_report(days: int = 1):
     """
     Orchestrate the collection of intelligence using Unified Engine V2.
     Supports Daily (days=1) or Weekly/Custom (days>1) briefings.
+
+    推送功能已移至 OpenClaw Skill，请使用:
+    - clawhub install intel-briefing
+    - 或直接运行 scripts/openclaw_handler.py
     """
     setup_logging()
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")

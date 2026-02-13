@@ -43,7 +43,6 @@ implementation_plan.md
 
 # === 隐私保护：个人策略和偏好 ===
 AIA_Field_Manual.md
-SKILL.md
 run_revenue_architect.py
 run_bounty_hunter.py
 run_alpha_radar.py
