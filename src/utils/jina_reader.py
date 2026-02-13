@@ -14,15 +14,14 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Jina Reader API endpoint
-JINA_READER_URL = "https://r.jina.ai/"
+# Import from centralized config
+try:
+    from config import JINA_READER_URL, JINA_TIMEOUT, JINA_MAX_CHARS
+except ImportError:
+    from src.config import JINA_READER_URL, JINA_TIMEOUT, JINA_MAX_CHARS
 
-# Config
-FETCH_TIMEOUT = 30  # seconds
-MAX_CONTENT_CHARS = 15000
 
-
-def fetch_full_content(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
+def fetch_full_content(url: str, timeout: int = JINA_TIMEOUT) -> Optional[str]:
     """
     Fetch full article content from a URL using Jina Reader API.
     
@@ -59,9 +58,9 @@ def fetch_full_content(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
                     logger.warning(f"Content too short ({len(content)} chars)")
                     return None
 
-                if len(content) > MAX_CONTENT_CHARS:
-                    content = content[:MAX_CONTENT_CHARS] + "\n\n[...内容已截断...]"
-                    logger.debug(f"Jina truncated to {MAX_CONTENT_CHARS} chars")
+                if len(content) > JINA_MAX_CHARS:
+                    content = content[:JINA_MAX_CHARS] + "\n\n[...内容已截断...]"
+                    logger.debug(f"Jina truncated to {JINA_MAX_CHARS} chars")
                 else:
                     logger.debug(f"Jina fetched {len(content)} chars")
                 

@@ -18,8 +18,14 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
 
-# Constants
-CONTENT_TRUNCATE_LIMIT = 3000
+# Import from centralized config
+try:
+    from config import CONTENT_TRUNCATE_LIMIT
+except ImportError:
+    try:
+        from src.config import CONTENT_TRUNCATE_LIMIT
+    except ImportError:
+        CONTENT_TRUNCATE_LIMIT = 3000
 
 
 def _validate_url(url: str) -> bool:
@@ -68,7 +74,7 @@ def enrich_items_with_content(items: List[Dict], max_workers: int = 10) -> List[
                 content = future.result()
                 if content:
                     item['content'] = content
-            except (requests.RequestException, ValueError) as e:
+            except Exception as e:
                 logger.debug(f"Enrich failed for {item.get('url', '?')}: {e}")
                 item['content'] = ""
     return items

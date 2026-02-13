@@ -4,11 +4,6 @@ import argparse
 import logging
 import datetime
 
-# Path setup
-SRC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')
-if SRC_PATH not in sys.path:
-    sys.path.insert(0, SRC_PATH)
-
 from src.intel_collector import fetch_all_sources
 from src.report_generator import generate_report
 from src.config import setup_logging

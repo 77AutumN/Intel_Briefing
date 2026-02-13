@@ -20,6 +20,9 @@ from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
+# Max time to wait for any single source group (seconds)
+FETCH_TIMEOUT = 120
+
 # --- Path Setup ---
 LOCAL_SRC_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src')
 if LOCAL_SRC_PATH not in sys.path:
@@ -278,12 +281,24 @@ def fetch_all_sources(limit_per_source: int = 10) -> dict:
         future_xhs = executor.submit(_fetch_xhs)
         future_blogs = executor.submit(_fetch_hn_blogs, 5)
 
-        external = future_external.result()
-        ph_data = future_ph.result()
-        arxiv_data = future_arxiv.result()
-        social_data = future_social.result()
-        xhs_data = future_xhs.result()
-        blog_data = future_blogs.result()
+        try:
+            external = future_external.result(timeout=FETCH_TIMEOUT)
+        except (concurrent.futures.TimeoutError, Exception) as e:
+            logger.warning(f"External sources timed out or failed: {e}")
+            external = {"tech_trends": [], "capital_flow": [], "community": []}
+
+        def _safe_result(future, name, default=None):
+            try:
+                return future.result(timeout=FETCH_TIMEOUT)
+            except (concurrent.futures.TimeoutError, Exception) as e:
+                logger.warning(f"{name} timed out or failed: {e}")
+                return default if default is not None else []
+
+        ph_data = _safe_result(future_ph, "Product Hunt")
+        arxiv_data = _safe_result(future_arxiv, "ArXiv")
+        social_data = _safe_result(future_social, "Grok Social")
+        xhs_data = _safe_result(future_xhs, "XHS")
+        blog_data = _safe_result(future_blogs, "HN Blogs")
 
     intel = {
         "tech_trends": _dedup_items(external.get("tech_trends", [])),

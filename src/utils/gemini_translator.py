@@ -2,11 +2,10 @@
 Gemini Translator - 使用 Gemini API 翻译文本为中文
 用于将 ArXiv 论文摘要翻译成简体中文
 """
-import os
 import sys
+import time
 import logging
 import httpx
-from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +13,11 @@ logger = logging.getLogger(__name__)
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-# Load environment variables
-load_dotenv()
-
-# Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-MODEL_NAME = "gemini-2.5-flash-lite"
+# Import from centralized config
+try:
+    from config import GEMINI_API_KEY, GEMINI_API_URL, GEMINI_MODEL, GEMINI_TIMEOUT, GEMINI_MAX_RETRIES
+except ImportError:
+    from src.config import GEMINI_API_KEY, GEMINI_API_URL, GEMINI_MODEL, GEMINI_TIMEOUT, GEMINI_MAX_RETRIES
 
 def translate_to_chinese(text: str, max_chars: int = 100) -> str:
     """
@@ -48,23 +45,21 @@ def translate_to_chinese(text: str, max_chars: int = 100) -> str:
 原文：
 {text}"""
 
-    url = f"{GEMINI_API_URL}/{MODEL_NAME}:generateContent?key={GEMINI_API_KEY}"
-    
+    url = f"{GEMINI_API_URL}/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+
     payload = {
         "contents": [{
             "parts": [{"text": prompt}]
         }],
         "generationConfig": {
             "temperature": 0.3,
-            "maxOutputTokens": 1024  # 增加到1024以支持完整摘要翻译
+            "maxOutputTokens": 1024
         }
     }
-    import time
-    
-    max_retries = 3
-    for attempt in range(max_retries):
+
+    for attempt in range(GEMINI_MAX_RETRIES):
         try:
-            response = httpx.post(url, json=payload, timeout=60)  # 增加到60秒
+            response = httpx.post(url, json=payload, timeout=GEMINI_TIMEOUT)
             response.raise_for_status()
             
             data = response.json()
@@ -74,15 +69,15 @@ def translate_to_chinese(text: str, max_chars: int = 100) -> str:
                 return result.strip()
             else:
                 # API 返回空结果，重试
-                if attempt < max_retries - 1:
-                    logger.warning(f"Gemini 返回空结果，重试 ({attempt + 1}/{max_retries})...")
+                if attempt < GEMINI_MAX_RETRIES - 1:
+                    logger.warning(f"Gemini 返回空结果，重试 ({attempt + 1}/{GEMINI_MAX_RETRIES})...")
                     time.sleep(2 ** attempt)
                     continue
                 return text[:max_chars] + "..." if len(text) > max_chars else text
-                
+
         except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError) as e:
-            if attempt < max_retries - 1:
-                logger.warning(f"Gemini 翻译失败 ({attempt + 1}/{max_retries}): {e}")
+            if attempt < GEMINI_MAX_RETRIES - 1:
+                logger.warning(f"Gemini 翻译失败 ({attempt + 1}/{GEMINI_MAX_RETRIES}): {e}")
                 time.sleep(2 ** attempt)
                 continue
             logger.error(f"Gemini 翻译最终失败: {e}")
@@ -151,7 +146,7 @@ def summarize_blog_article(content: str, mode: str = "brief") -> str:
 {content[:6000]}"""
         max_tokens = 1024
     
-    url = f"{GEMINI_API_URL}/{MODEL_NAME}:generateContent?key={GEMINI_API_KEY}"
+    url = f"{GEMINI_API_URL}/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -162,7 +157,7 @@ def summarize_blog_article(content: str, mode: str = "brief") -> str:
     }
     
     try:
-        with httpx.Client(timeout=60) as client:
+        with httpx.Client(timeout=GEMINI_TIMEOUT) as client:
             response = client.post(url, json=payload)
             if response.status_code == 200:
                 data = response.json()

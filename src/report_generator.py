@@ -11,6 +11,15 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Import from centralized config
+try:
+    from config import GEMINI_RATE_LIMIT_DELAY
+except ImportError:
+    try:
+        from src.config import GEMINI_RATE_LIMIT_DELAY
+    except ImportError:
+        GEMINI_RATE_LIMIT_DELAY = 1.5
+
 # --- Gemini Translator ---
 try:
     from utils.gemini_translator import translate_to_chinese, summarize_blog_article
@@ -33,9 +42,6 @@ if not GEMINI_AVAILABLE:
 
     def summarize_blog_article(content, mode="brief"):
         return ""
-
-# Rate limit delay between Gemini API calls
-GEMINI_RATE_LIMIT_DELAY = 1.5
 
 
 def generate_report(intel: dict, date_str: str) -> str:
@@ -98,7 +104,8 @@ def generate_report(intel: dict, date_str: str) -> str:
             summary = item.get("summary", "").replace("\n", " ")
 
             brief_cn = translate_to_chinese(summary[:200], max_chars=80) if summary else ""
-            time.sleep(GEMINI_RATE_LIMIT_DELAY)
+            if GEMINI_AVAILABLE and summary:
+                time.sleep(GEMINI_RATE_LIMIT_DELAY)
             detail_cn = translate_to_chinese(summary, max_chars=2000) if summary else ""
 
             lines.append(f"### {i}. [{title}]({url})")
