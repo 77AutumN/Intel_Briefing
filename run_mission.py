@@ -8,13 +8,6 @@ from src.intel_collector import fetch_all_sources
 from src.report_generator import generate_report
 from src.config import setup_logging
 
-# Webhook 推送（可选）
-try:
-    from src.utils.webhook_notifier import notify_all
-    WEBHOOK_AVAILABLE = True
-except ImportError:
-    WEBHOOK_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 # Configuration
@@ -25,6 +18,10 @@ def generate_morning_report(days: int = 1):
     """
     Orchestrate the collection of intelligence using Unified Engine V2.
     Supports Daily (days=1) or Weekly/Custom (days>1) briefings.
+
+    推送功能已移至 OpenClaw Skill，请使用:
+    - clawhub install intel-briefing
+    - 或直接运行 scripts/openclaw_handler.py
     """
     setup_logging()
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -55,10 +52,6 @@ def generate_morning_report(days: int = 1):
         f.write(final_content)
 
     logger.info(f"简报已生成: {report_file}")
-
-    # 4. Webhook 推送（如果配置了）
-    if WEBHOOK_AVAILABLE:
-        notify_all(final_content, date_str)
 
 
 if __name__ == "__main__":
