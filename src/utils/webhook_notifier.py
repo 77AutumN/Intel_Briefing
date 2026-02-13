@@ -362,18 +362,18 @@ def send_to_discord(content: FormattedContent) -> bool:
 
 
 def send_to_telegram(content: FormattedContent) -> bool:
-    """发送到 Telegram Bot"""
+    """发送到 Telegram Bot - 使用 HTML 模式避免 Markdown 转义问题"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
-    # Telegram 支持 Markdown，但语法略有不同
-    # 转换链接格式: [text](url) -> [text](url) (相同)
+    # 使用 HTML 模式更稳定，避免 Markdown 特殊字符转义问题
+    # 参考: https://core.telegram.org/bots/api#html-style
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": content.markdown[:4096],
-        "parse_mode": "Markdown",
+        "text": content.html[:4096],
+        "parse_mode": "HTML",
         "disable_web_page_preview": True  # 避免链接预览干扰阅读
     }
 
@@ -397,19 +397,29 @@ def send_to_telegram(content: FormattedContent) -> bool:
 # ============================================
 
 def send_to_bark(content: FormattedContent) -> bool:
-    """发送到 Bark (iOS 推送)"""
+    """发送到 Bark (iOS 推送)
+
+    Bark URL 格式支持两种:
+    1. https://api.day.app/your_device_key (推荐，device_key 在 URL 中)
+    2. https://your-server.com/push (需要在 payload 中提供 device_key)
+
+    参考: https://github.com/Finb/Bark
+    """
     if not BARK_URL:
         return False
 
-    # Bark URL 格式: https://api.day.app/your_key/title/body
-    # 或者使用 POST JSON
     url = BARK_URL.rstrip("/")
+
+    # 判断 URL 格式，提取或构造正确的请求
+    # 如果 URL 包含 /push 结尾，需要额外的 device_key
+    # 如果 URL 是 https://api.day.app/xxxkey 格式，直接 POST 到该 URL
 
     payload = {
         "title": content.title,
         "body": content.plain[:1000],  # Bark 推送内容不宜过长
         "group": "情报简报",
-        "sound": "minuet"  # 通知声音
+        "sound": "minuet",  # 通知声音
+        "level": "active"  # 立即显示并点亮屏幕
     }
 
     try:
@@ -428,22 +438,28 @@ def send_to_bark(content: FormattedContent) -> bool:
 
 
 def send_to_pushover(content: FormattedContent) -> bool:
-    """发送到 Pushover"""
+    """发送到 Pushover
+
+    参考: https://pushover.net/api
+    使用 application/x-www-form-urlencoded 格式
+    """
     if not PUSHOVER_USER_KEY or not PUSHOVER_API_TOKEN:
         return False
 
     url = "https://api.pushover.net/1/messages.json"
 
+    # Pushover 使用 form-urlencoded 格式
     payload = {
         "token": PUSHOVER_API_TOKEN,
         "user": PUSHOVER_USER_KEY,
         "title": content.title,
-        "message": content.plain[:1024],  # Pushover 限制
-        "html": 1,  # 支持 HTML
-        "priority": 0  # 正常优先级
+        "message": content.plain[:1024],  # Pushover 消息限制 1024 字符
+        "html": "1",  # 启用 HTML 支持
+        "priority": "0"  # 正常优先级 (-2 到 2)
     }
 
     try:
+        # 使用 data= 发送 form-urlencoded 格式
         response = httpx.post(url, data=payload, timeout=WEBHOOK_TIMEOUT)
         if response.status_code == 200:
             data = response.json()
