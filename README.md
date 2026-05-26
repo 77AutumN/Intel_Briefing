@@ -8,7 +8,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-34%20passed-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-30%20passed-brightgreen)](tests/)
 [![GitHub Stars](https://img.shields.io/github/stars/77AutumN/Intel_Briefing?style=social)](https://github.com/77AutumN/Intel_Briefing)
 
 </div>
@@ -35,8 +35,8 @@
 | 💰 资本动向 | 36Kr, WallStreetCN | 谁在融资、谁在并购 |
 | 📚 学术前沿 | ArXiv AI/ML, **HF Daily Papers** | 最新 AI 论文，按社区热度排序 |
 | 🚀 产品精选 | Product Hunt | 今天发布了什么新产品 |
-| 💬 社区热议 | V2EX | 中文开发者社区在讨论什么 |
-| 🐦 社交舆情 | X (Twitter) via Grok | Twitter 上的技术热话题 |
+| 💬 社区热点 | V2EX | 中文开发者社区在讨论什么 |
+| 🐦 社交热议 | X (Twitter) via Grok | Twitter 上的技术热话题 |
 | 📖 深度洞察 | HN Top Blogs, TechCrunch, MIT TR | AI 巨头工程博客全文分析 |
 
 ---
@@ -98,9 +98,11 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 ## 📁 项目结构
 
 > [!NOTE]
-> 当前存在**两套数据采集路径**（历史原因，Phase 2 收口计划中）：
-> - **Tier 1 (聚合器)**: HN/GitHub/36Kr/V2EX/WallStreetCN 走 `src/external/fetch_news.py`
-> - **Tier 2 (独立传感器)**: Product Hunt/ArXiv/HF Papers/Grok/HN Blogs/TechCrunch/MIT-TR 走 `src/sensors/`
+> 数据是从两个地方抓的，你不用关心这个区别——日报里看到的内容都一样。
+> - 一批"老牌"信息源（HN、GitHub、36Kr、V2EX、WallStreetCN）走 `src/external/fetch_news.py`
+> - 其余每个源各有一个独立的"传感器"文件，放在 `src/sensors/` 里
+>
+> 这是项目早期演进留下的两套写法，功能上都正常，未来会慢慢合并成一套。
 
 ```
 Intel_Briefing/
@@ -113,13 +115,12 @@ Intel_Briefing/
 │   ├── sensors/                # Tier 2: 独立数据源传感器
 │   │   ├── arxiv_ai.py         # ArXiv AI/ML 论文
 │   │   ├── hf_daily_papers.py  # HuggingFace Daily Papers
-│   │   ├── github_trending.py  # GitHub 热门项目
-│   │   ├── hn_blogs.py         # AI 巨头工程博客 RSS (12 源)
+│   │   ├── hn_blogs.py         # AI 巨头工程博客 RSS (15 源 + 动态 OPML)
 │   │   ├── product_hunt.py     # Product Hunt (含 Grok fallback)
 │   │   ├── techcrunch_rss.py   # TechCrunch RSS
 │   │   ├── mit_tech_review.py  # MIT Technology Review
 │   │   ├── x_grok_sensor.py    # X/Twitter via Grok API
-│   │   └── ...
+│   │   └── horizon.py          # 机会雷达 (独立功能，见下方 scripts/)
 │   ├── utils/
 │   │   ├── gemini_translator.py # Gemini 中文翻译 + 摘要
 │   │   ├── generate_summaries.py # PWA 预烘焙摘要
@@ -127,8 +128,12 @@ Intel_Briefing/
 │   │   └── verifier.py         # 链接有效性验证
 │   └── external/
 │       └── fetch_news.py       # Tier 1: HN/GitHub/36Kr/V2EX/WS 聚合器
-├── tests/                      # 34 tests (import/行为/降级)
-│   ├── test_import_smoke.py    # 16 模块 import 验证
+├── scripts/                    # 🧰 附带的小工具 (与日报独立)
+│   ├── horizon_report.py       # 机会雷达：扫描跨领域的新机会
+│   ├── condense_month.py       # 把一个月的日报浓缩成月报
+│   └── recurrence_scan.py      # 找出反复出现的热点话题
+├── tests/                      # 30 tests (import/行为/降级)
+│   ├── test_import_smoke.py    # 12 模块 import 验证
 │   ├── test_anti_hallucination.py  # 防幻觉行为测试
 │   ├── test_graceful_degradation.py # 优雅降级测试
 │   └── test_core.py            # 核心功能测试
@@ -158,11 +163,11 @@ Intel_Briefing/
 
 ```bash
 pip install -e .      # 首次需要
-pytest tests/ -v      # 34 tests, <1s
+pytest tests/ -v      # 30 tests, <1s
 ```
 
 测试覆盖三个维度：
-- **Import Smoke**: 所有 16 个模块可独立导入
+- **Import Smoke**: 所有 12 个模块可独立导入
 - **Anti-Hallucination**: Grok fallback 产生的猜测 URL 不会作为可点击链接进入报告
 - **Graceful Degradation**: 缺失 API key 或空数据时系统不崩溃
 
