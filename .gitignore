@@ -45,6 +45,9 @@ implementation_plan.md
 AIA_Field_Manual.md
 SKILL.md
 
+# 个人画像（从 commander_state.example.md 复制后填入真实信息，请勿提交）
+prompts/commander_state.md
+
 # Agent 配置（含个人工作流和策略 prompt）
 .agent/
 

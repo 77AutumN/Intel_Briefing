@@ -120,7 +120,7 @@
 - 👁️ **核心悬念**: [可证伪的二分判断或数据阈值]
 
 ---
-*📡 7Brief Weekly · by 777秋 · A.I.A. Command Center | 12 路传感器覆盖 Hacker News · Product Hunt · arXiv · TechCrunch · MIT Tech Review · GitHub Trending · X/Grok · V2EX · HN Top 30 Blogs*
+*📡 7Brief Weekly · A.I.A. Command Center | 12 路传感器覆盖 Hacker News · Product Hunt · arXiv · TechCrunch · MIT Tech Review · GitHub Trending · X/Grok · V2EX · HN Top 30 Blogs*
 ```
 
 ---
