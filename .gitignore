@@ -55,3 +55,34 @@ prompts/commander_state.md
 temp_*.csv
 debug_*.py
 *.bak
+
+# === 防误提交：本地私有目录与杂物（防止 git add -A 把它们带进公开仓库）===
+# Agent / 工具的本地配置与 IPC 日志
+.agents/
+.antigravitycli/
+.claude/
+.claude_ipc/
+.gemini/
+.gemini_ipc/
+.obsidian/
+
+# 草稿、临时输出、构建产物
+tmp/
+intel_briefing.egg-info/
+*.log
+tmp_recurrence*.txt
+scan_results.json
+ppt_search.json
+w*_summary.json
+
+# 社交/内容创作草稿（个人/商业策略）
+claude_xhs_*
+gemini_xhs_prompt.txt
+article_content.txt
+tweet.json
+
+# 内部评审 / 交接文档（非公开）
+docs/CODEX_*
+docs/HANDOFF_*
+docs/GEMINI_AUDIT_REPORT.md
+docs/MEMORY_BANK_BLUEPRINT.md
