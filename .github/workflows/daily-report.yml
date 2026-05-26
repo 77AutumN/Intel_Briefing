@@ -32,10 +32,20 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python cli.py
 
-      - name: Deliver report to PWA
+      # Optional: push the generated report to a separate frontend (PWA) repo.
+      # Configure repository variable PWA_REPO (e.g. "your-name/your-pwa-repo")
+      # and secret PWA_DEPLOY_TOKEN. If either is missing, this step is skipped,
+      # so forks without a PWA frontend won't fail here.
+      - name: Deliver report to PWA (optional)
         env:
           PWA_DEPLOY_TOKEN: ${{ secrets.PWA_DEPLOY_TOKEN }}
+          PWA_REPO: ${{ vars.PWA_REPO }}
         run: |
+          if [ -z "$PWA_DEPLOY_TOKEN" ] || [ -z "$PWA_REPO" ]; then
+            echo "ℹ️ PWA delivery skipped (set PWA_REPO variable and PWA_DEPLOY_TOKEN secret to enable)."
+            exit 0
+          fi
+
           DATE=$(date -u +%Y-%m-%d)
           REPORT="reports/daily_briefings/Morning_Report_${DATE}.md"
           SUMMARIES="reports/summaries/${DATE}.json"
@@ -48,7 +58,7 @@ jobs:
 
           echo "📄 Report found: $(wc -c < "$REPORT") bytes"
 
-          git clone https://x-access-token:${PWA_DEPLOY_TOKEN}@github.com/77AutumN/intel-briefing-pwa.git /tmp/pwa
+          git clone https://x-access-token:${PWA_DEPLOY_TOKEN}@github.com/${PWA_REPO}.git /tmp/pwa
           cp "$REPORT" /tmp/pwa/data/daily_briefings/
 
           # Copy pre-generated summaries if available
@@ -61,8 +71,8 @@ jobs:
           fi
 
           cd /tmp/pwa
-          git config user.name "Intel Bot"
-          git config user.email "bot@7brief.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/daily_briefings/
           git add -f public/data/summaries/
           git diff --cached --stat
@@ -72,6 +82,6 @@ jobs:
           else
             git commit -m "data: add daily report ${DATE}"
             git push
-            echo "✅ Report delivered to intel-briefing-pwa"
+            echo "✅ Report delivered to ${PWA_REPO}"
           fi
 

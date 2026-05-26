@@ -181,7 +181,9 @@ pytest tests/ -v      # 33 tests, <1s
 
 ## 🤖 GitHub Actions 自动化
 
-项目自带 `.github/workflows/daily-report.yml`，配置好 Secrets 后每天 UTC 23:51（北京 07:51）自动生成日报并推送到配置好的 PWA 前端仓库。
+项目自带 `.github/workflows/daily-report.yml`，配置好 Secrets 后每天 UTC 23:51（北京 07:51）自动生成日报。
+
+> **可选投递到前端仓库**：如果你有自己的 PWA / 前端仓库，设置仓库变量 `PWA_REPO`（如 `your-name/your-pwa-repo`）和 Secret `PWA_DEPLOY_TOKEN`，workflow 会自动把日报推送过去；不设置则跳过该步骤，不影响日报生成。
 
 ---
 
