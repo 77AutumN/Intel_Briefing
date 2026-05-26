@@ -226,7 +226,7 @@ def generate_news_brief(title: str, content: str = "", category: str = "tech",
     """
     为 Tech/Capital 类新闻生成情报风格的中文短报（80-120字）。
     包含 [JUNK] 熔断协议：如果内容是垃圾，AI 返回 [JUNK] 时自动降级为标题推断。
-    Ported from PWA's pre-generate-summaries.mjs.
+    Ported from the companion PWA frontend's summary-generation logic.
 
     Args:
         title: 文章标题
@@ -306,7 +306,7 @@ def generate_news_brief(title: str, content: str = "", category: str = "tech",
 def expand_product_tagline(name: str, tagline: str) -> str:
     """
     将 Product Hunt 英文 tagline 扩展为中文产品定位描述（30-60字）。
-    Ported from PWA's pre-generate-summaries.mjs P1 product tagline expansion.
+    Ported from the companion PWA frontend's product tagline expansion logic.
     
     Args:
         name: 产品名称

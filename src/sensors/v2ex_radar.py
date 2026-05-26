@@ -46,7 +46,7 @@ class V2EXRadar:
         "在线等", "有偿", "急", "救命", "红包", "崩溃", "求大佬", "付费解决"
     ]
     
-    # Tech Stack matching User's capabilities
+    # Tech-stack keywords used to score relevance (customize to your own skills)
     TECH_KEYWORDS = [
         "FPGA", "Verilog", "Python", "爬虫", "脚本", "Web3", "Solana", 
         "Rust", "图像", "视觉", "识别", "抠图", "Automation", "Bot"

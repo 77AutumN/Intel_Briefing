@@ -4,7 +4,7 @@ Generate AI Summaries - 为所有文章生成预烘焙 AI 摘要
 
 输出格式: { "articleId": "summaryText" }
 articleId 格式: {dateNoHyphens}-{category}-{index}
-与 PWA 前端 intelService.ts 完全一致
+与配套的 PWA 前端摘要逻辑保持一致
 """
 
 import os

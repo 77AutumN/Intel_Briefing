@@ -77,7 +77,7 @@ def fetch_full_content(url: str, timeout: int = JINA_TIMEOUT) -> Optional[str]:
 def is_junk_content(text: str) -> bool:
     """
     Detect junk/garbage content: Cloudflare challenges, 403 pages, CAPTCHAs, etc.
-    Ported from PWA's pre-generate-summaries.mjs JUNK_PATTERNS.
+    Ported from the companion PWA frontend's JUNK_PATTERNS.
     """
     if not text:
         return True
@@ -97,8 +97,8 @@ def fetch_search_snippet(title: str, url: str, timeout: int = 8) -> Optional[str
     """
     Fetch article description from DuckDuckGo Lite search results.
     When Jina fails (Cloudflare/403), search engines usually have a cached snippet.
-    Ported from PWA's pre-generate-summaries.mjs.
-    
+    Ported from the companion PWA frontend's summary-generation logic.
+
     Args:
         title: Article title
         url: Article URL (used to extract domain for site: filter)
