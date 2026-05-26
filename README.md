@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🕵️ Intel Briefing - AI 情报聚合引擎
+# 🕵️ Intel Briefing — 你的个人情报官
 
-**每天 5 分钟，掌握全球科技圈正在发生什么。**
+**中文** | [English](README_EN.md)
 
-从 12+ 数据源自动抓取、翻译、分析情报，生成一份中文日报。
+**别只是刷新闻。把每天的全球信号——包括你信息茧房之外的那些——变成「今天我该做什么」的答案。**
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -17,17 +17,28 @@
 
 ## 🤔 这是什么？
 
-一个**情报采集+分析引擎**，自动从全网科技信息源抓取数据，用 Gemini 翻译和摘要，生成一份结构化的中文报告。
+一套**个人情报系统**。它每天帮你做三件事：
+
+1. 📡 **抓情报** — 从 10+ 全球科技/商业信息源自动采集、翻译、摘要，生成一份中文日报。
+2. 🔭 **破茧房** — 用一个专门的「跨域雷达」主动塞给你科学、哲学、地缘、设计等**科技圈以外**的信号，刻意和上面的科技源零重叠，免得你越看越窄。
+3. 🚀 **找灵感** — 把上面两样喂给一个思维框架，提炼成一份**每日行动计划（Mission Plan）**，回答那个真正重要的问题：
+
+> 🧭 **今天做什么，能让自己变得更有价值？**
+> 而「有价值」不局限于你当前的赛道——跨越边界的认知，才是终极杠杆。
+
+**和普通新闻聚合器的区别**：聚合器给你「更多信息」；它给你「更宽的视野 + 一个可执行的答案」。
 
 **适合谁用？**
-- 想每天快速了解科技圈动态的开发者
+- 想每天快速了解全球动态、又怕陷进信息茧房的开发者
 - 做竞品分析、行业研究的产品经理
-- 想找灵感和机会的独立开发者 / 创业者
+- 想从每日信号里找灵感和机会的独立开发者 / 创作者
 
-## ✨ 功能概览
+---
 
-### 📊 情报日报
-从 12+ 数据源抓取最新信息，生成包含 7 大板块的中文日报：
+## ✨ 三层能力
+
+### 📊 第一层：情报日报
+从 10+ 数据源抓取最新信息，生成包含 7 大板块的中文日报：
 
 | 板块 | 数据源 | 你能看到什么 |
 |:--|:--|:--|
@@ -38,6 +49,73 @@
 | 💬 社区热点 | V2EX | 中文开发者社区在讨论什么 |
 | 🐦 社交热议 | X (Twitter) via Grok | Twitter 上的技术热话题 |
 | 📖 深度洞察 | HN Top Blogs, TechCrunch, MIT TR | AI 巨头工程博客全文分析 |
+
+### 🔭 第二层：Horizon —— 防信息茧房雷达
+日报覆盖的是科技 / AI / 商业垂类。但你的认知边界，不该被数据源的边界限制。
+
+Horizon 是一个独立的「跨域认知雷达」，**刻意只抓科技圈以外**的高质量信息源，覆盖 5 大领域、9 个源：
+
+| 领域 | 信息源 |
+|:--|:--|
+| 🔬 科学前沿 | Nature、Quanta Magazine |
+| 🧠 哲学人文 | Aeon (Essays / Philosophy) |
+| 🌍 地缘与经济 | Reuters、Geopolitical Futures |
+| 🔀 跨学科 | Nautilus、Aeon (Science) |
+| 🎨 设计美学 | Dezeen |
+
+它内置「领域多样性」逻辑——保证每个领域至少出一条，绝不让你被单一信息流淹没。
+
+```bash
+python scripts/horizon_report.py        # 单独跑一次跨域扫描
+```
+
+> 实现见 `src/sensors/horizon.py`。它是独立功能，**不混进日报**，而是作为「破茧」输入，喂给下面的 Mission Plan。
+
+### 🚀 第三层：Mission Plan —— 每日行动计划
+这是整个系统的落点。把「日报 + Horizon 跨域信号」交给一个**思维树（Tree of Thoughts）框架**，提炼成一份当日行动计划，分四个区：
+
+| 区域 | 是什么 |
+|:--|:--|
+| 🔴 核心区 (Strike Zone) | 直接能让你「更有价值」的信号 → 提炼出今日 **Top 1 必做** |
+| 🟡 探索区 (Exploration Zone) | 不直接相关、但有「跨域杠杆」潜力的信号 |
+| 🔭 地平线区 (Horizon Zone) | 来自科技圈以外的认知冲击，**强制非空**——这是防茧房的硬约束 |
+| ⚪ 监测区 (Watch Zone) | 暂不行动、但值得保持雷达的趋势 |
+
+框架定义在 `prompts/tot_mission_planner.md`（一个可直接喂给 LLM 的 prompt）。想让它贴合你自己的方向？复制 `prompts/commander_state.example.md` 填上你的身份和优先级即可。
+
+> ⚠️ Mission Plan 是 **prompt 驱动**的一步：你把当天的日报和 Horizon 结果连同这个 prompt 交给 LLM（Claude / Gemini 等），由它生成。不是一键脚本。
+
+---
+
+## 📸 长这样
+
+**① 每日情报日报（节选）**
+
+```markdown
+# 🌐 全球情报日报
+**日期:** 2026-05-27
+
+## 🛠️ 技术趋势
+### 1. [Language Models Need Sleep](https://arxiv.org/abs/...)
+📍 Hacker News | 🔥 84 points | 🕒 1 小时前
+
+## 📚 学术前沿
+### 1. MobileGym: A Verifiable Simulation Platform for Mobile GUI Agents
+👤 ... | 📅 2026-05-25
+```
+
+**② Mission Plan（结构示意）**
+
+```markdown
+# 🚀 Mission Plan [日期]
+
+> ⚡ 今日 Top 1：<最该立刻动手的一件事>（⏱️ 预计耗时 / 🎯 对我的价值）
+
+## 🔴 核心区     主线推进 / 能力杠杆 / 真诚表达 / 认知升级
+## 🟡 探索区     <信号> → "这可能和你有关，因为…"
+## 🔭 地平线区   <科技圈外的认知冲击>   ← 强制非空
+## ⚪ 监测区     <暂不行动、但保持关注的趋势>
+```
 
 ---
 
@@ -61,11 +139,12 @@ cp .env.example .env
 ### 3. 运行
 
 ```bash
-python cli.py              # 生成完整日报
-python cli.py --test       # 测试模式（每个源只抓 1 条）
+python cli.py                       # 生成完整日报
+python cli.py --test                # 测试模式（每个源只抓 1 条）
+python scripts/horizon_report.py    # 跑跨域 Horizon 扫描
 ```
 
-报告保存在 `reports/daily_briefings/` 目录下。
+日报保存在 `reports/daily_briefings/`。想要每日行动计划，把日报 + Horizon 结果连同 `prompts/tot_mission_planner.md` 交给你的 LLM 即可。
 
 ### 4. 代理配置（可选）
 
@@ -91,7 +170,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 | `PRODUCTHUNT_TOKEN` | Product Hunt 数据 | 可选 | ✅ [免费申请](https://www.producthunt.com/v2/oauth/applications) |
 | `GEMINI_API_KEY` | Google Gemini (中文翻译+摘要) | 可选 | ✅ 免费额度充足 ([申请](https://aistudio.google.com/apikey)) |
 
-> ⚠️ **最低要求：拿到 `GITHUB_TOKEN` 就能跑基础日报。** 没有其他 Key 时对应功能会优雅降级（跳过而非崩溃）。
+> ⚠️ **最低要求：拿到 `GITHUB_TOKEN` 就能跑基础日报。** 没有其他 Key 时对应功能会优雅降级（跳过而非崩溃）。Horizon 雷达走公开 RSS，零 Key 即可运行。
 
 ---
 
@@ -99,8 +178,8 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 
 > [!NOTE]
 > 数据是从两个地方抓的，你不用关心这个区别——日报里看到的内容都一样。
-> - 一批"老牌"信息源（HN、GitHub、36Kr、V2EX、WallStreetCN）走 `src/external/fetch_news.py`
-> - 其余每个源各有一个独立的"传感器"文件，放在 `src/sensors/` 里
+> - 一批「老牌」信息源（HN、GitHub、36Kr、V2EX、WallStreetCN）走 `src/external/fetch_news.py`
+> - 其余每个源各有一个独立的「传感器」文件，放在 `src/sensors/` 里
 >
 > 这是项目早期演进留下的两套写法，功能上都正常，未来会慢慢合并成一套。
 
@@ -120,7 +199,7 @@ Intel_Briefing/
 │   │   ├── techcrunch_rss.py   # TechCrunch RSS
 │   │   ├── mit_tech_review.py  # MIT Technology Review
 │   │   ├── x_grok_sensor.py    # X/Twitter via Grok API
-│   │   └── horizon.py          # 机会雷达 (独立功能，见下方 scripts/)
+│   │   └── horizon.py          # 🔭 Horizon 跨域雷达 (防信息茧房，见下方 scripts/)
 │   ├── utils/
 │   │   ├── gemini_translator.py # Gemini 中文翻译 + 摘要
 │   │   ├── generate_summaries.py # PWA 预烘焙摘要
@@ -128,8 +207,11 @@ Intel_Briefing/
 │   │   └── verifier.py         # 链接有效性验证
 │   └── external/
 │       └── fetch_news.py       # Tier 1: HN/GitHub/36Kr/V2EX/WS 聚合器
+├── prompts/                    # 🧠 分析框架 prompt 模板
+│   ├── tot_mission_planner.md  # Mission Plan 思维树框架
+│   └── commander_state.example.md # 个性化模板 (复制后填你的身份/优先级)
 ├── scripts/                    # 🧰 附带的小工具 (与日报独立)
-│   ├── horizon_report.py       # 机会雷达：扫描跨领域的新机会
+│   ├── horizon_report.py       # Horizon 雷达：扫描跨领域信号
 │   ├── condense_month.py       # 把一个月的日报浓缩成月报
 │   └── recurrence_scan.py      # 找出反复出现的热点话题
 ├── tests/                      # 30 tests (import/行为/降级)
